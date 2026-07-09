@@ -1,168 +1,79 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Life Simulator</title>
-  <style>
-    :root{
-      --bg:#0f172a; --card:#111827; --card2:#1f2937; --text:#e5e7eb;
-      --muted:#94a3b8; --line:#334155; --accent:#38bdf8; --good:#22c55e;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#0f172a,#020617);color:var(--text)}
-    header{padding:22px 16px 10px}
-    h1{font-size:24px;margin:0 0 6px}
-    .sub{color:var(--muted);font-size:13px}
-    .wrap{padding:10px 14px 30px;max-width:980px;margin:auto}
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:760px){.grid{grid-template-columns:360px 1fr}}
-    .card{background:rgba(17,24,39,.92);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    .control{margin:14px 0}
-    .row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-    label{font-size:14px;color:#cbd5e1}
-    .val{font-weight:700;color:white}
-    input[type=range]{width:100%;accent-color:var(--accent)}
-    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-    .kpi{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}
-    .kpi .name{color:var(--muted);font-size:12px}
-    .kpi .num{font-size:20px;font-weight:800;margin-top:4px}
-    canvas{width:100%;height:260px;background:#020617;border-radius:14px;border:1px solid var(--line)}
-    table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
-    th,td{border-bottom:1px solid var(--line);padding:8px;text-align:right}
-    th:first-child,td:first-child{text-align:left}
-    th{color:#cbd5e1}
-    .note{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.5}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Life Simulator</title>
+<style>
+:root{--bg:#0b1220;--card:#101827;--card2:#1c2636;--text:#f1f5f9;--muted:#94a3b8;--line:#334155;--accent:#38bdf8}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#0b1220,#020617);color:var(--text)}
+header{padding:26px 16px 12px;max-width:980px;margin:auto}h1{font-size:32px;margin:0 0 8px}.sub{color:var(--muted);font-size:15px;line-height:1.5}
+.wrap{padding:10px 14px 34px;max-width:980px;margin:auto;display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:820px){.wrap{grid-template-columns:380px 1fr}}
+.card{background:rgba(16,24,39,.94);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 14px 34px rgba(0,0,0,.3)}
+.control{margin:16px 0}.row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}label{font-size:15px;color:#cbd5e1;font-weight:700}.val{font-weight:900;color:white;font-size:20px}
+input[type=range]{width:100%;accent-color:var(--accent)}.note{color:var(--muted);font-size:13px;margin-top:14px;line-height:1.6}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.kpi{background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:14px}.name{color:var(--muted);font-size:13px}.num{font-size:24px;font-weight:900;margin-top:6px}
+canvas{width:100%;height:300px;background:#020617;border-radius:16px;border:1px solid var(--line)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;color:#cbd5e1;font-size:13px}.chip{display:flex;gap:6px;align-items:center}.dot{width:14px;height:6px;border-radius:999px;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{border-bottom:1px solid var(--line);padding:9px 6px;text-align:right}th:first-child,td:first-child{text-align:left}th{color:#cbd5e1}
+.box{margin-top:14px;background:#0f172a;border:1px solid var(--line);border-radius:16px;padding:12px}.box h2{font-size:16px;margin:0 0 8px}.box p{margin:0;color:var(--muted);line-height:1.6;font-size:13px}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Life Simulator</h1>
-    <div class="sub">年収上昇 × 投資率 × 複利で、将来資産を円ベースで見る</div>
-  </header>
-
-  <main class="wrap grid">
-    <section class="card">
-      <div class="control">
-        <div class="row"><label>初期資産</label><span class="val" id="vInitial"></span></div>
-        <input id="initial" type="range" min="0" max="50000000" step="100000" value="1000000">
-      </div>
-      <div class="control">
-        <div class="row"><label>初年度年収</label><span class="val" id="vSalary"></span></div>
-        <input id="salary" type="range" min="3000000" max="30000000" step="100000" value="5300000">
-      </div>
-      <div class="control">
-        <div class="row"><label>年収成長率</label><span class="val" id="vSalaryGrowth"></span></div>
-        <input id="salaryGrowth" type="range" min="0" max="20" step="0.1" value="7">
-      </div>
-      <div class="control">
-        <div class="row"><label>投資率（年収に対して）</label><span class="val" id="vInvestRate"></span></div>
-        <input id="investRate" type="range" min="0" max="70" step="1" value="25">
-      </div>
-      <div class="control">
-        <div class="row"><label>運用利回り</label><span class="val" id="vReturnRate"></span></div>
-        <input id="returnRate" type="range" min="0" max="15" step="0.1" value="5">
-      </div>
-      <div class="control">
-        <div class="row"><label>期間</label><span class="val" id="vYears"></span></div>
-        <input id="years" type="range" min="1" max="50" step="1" value="30">
-      </div>
-      <div class="note">※税金・インフレ・暴落は未反映。まずは「年収が伸びるほど投資額も増える」基本モデル。</div>
-    </section>
-
-    <section class="card">
-      <div class="kpis">
-        <div class="kpi"><div class="name">最終資産</div><div class="num" id="finalAsset"></div></div>
-        <div class="kpi"><div class="name">最終年収</div><div class="num" id="finalSalary"></div></div>
-        <div class="kpi"><div class="name">累計投資額</div><div class="num" id="totalInvested"></div></div>
-        <div class="kpi"><div class="name">運用益</div><div class="num" id="gain"></div></div>
-      </div>
-      <canvas id="chart" width="900" height="420"></canvas>
-      <table>
-        <thead><tr><th>年</th><th>年収</th><th>年間投資</th><th>資産</th></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </section>
-  </main>
-
+<header><h1>Life Simulator</h1><div class="sub">年収上昇 × 投資率 × 複利。ベース・守り・攻めの3シナリオで将来資産を比較する。</div></header>
+<main class="wrap">
+<section class="card">
+<div class="control"><div class="row"><label>初期資産</label><span class="val" id="vInitial"></span></div><input id="initial" type="range" min="0" max="50000000" step="100000" value="1000000"></div>
+<div class="control"><div class="row"><label>初年度年収</label><span class="val" id="vSalary"></span></div><input id="salary" type="range" min="3000000" max="30000000" step="100000" value="5300000"></div>
+<div class="control"><div class="row"><label>年収成長率</label><span class="val" id="vSalaryGrowth"></span></div><input id="salaryGrowth" type="range" min="0" max="20" step="0.1" value="7"></div>
+<div class="control"><div class="row"><label>投資率（年収に対して）</label><span class="val" id="vInvestRate"></span></div><input id="investRate" type="range" min="0" max="70" step="1" value="25"></div>
+<div class="control"><div class="row"><label>運用利回り</label><span class="val" id="vReturnRate"></span></div><input id="returnRate" type="range" min="0" max="15" step="0.1" value="5"></div>
+<div class="control"><div class="row"><label>期間</label><span class="val" id="vYears"></span></div><input id="years" type="range" min="1" max="50" step="1" value="30"></div>
+<div class="note">守り：成長率・利回りを控えめに補正。攻め：成長率・投資率・利回りを強めに補正。税金・インフレ・暴落は次フェーズで追加。</div>
+</section>
+<section class="card">
+<div class="kpis">
+<div class="kpi"><div class="name">ベース最終資産</div><div class="num" id="baseAsset"></div></div>
+<div class="kpi"><div class="name">攻め最終資産</div><div class="num" id="bullAsset"></div></div>
+<div class="kpi"><div class="name">守り最終資産</div><div class="num" id="bearAsset"></div></div>
+<div class="kpi"><div class="name">1億円到達</div><div class="num" id="fireYear"></div></div>
+</div>
+<canvas id="chart" width="900" height="470"></canvas>
+<div class="legend">
+<span class="chip"><span class="dot" style="background:#38bdf8"></span>ベース</span>
+<span class="chip"><span class="dot" style="background:#22c55e"></span>攻め</span>
+<span class="chip"><span class="dot" style="background:#f59e0b"></span>守り</span>
+</div>
+<div class="box"><h2>シナリオ解釈</h2><p id="comment"></p></div>
+<table><thead><tr><th>年</th><th>年収</th><th>年間投資</th><th>資産</th></tr></thead><tbody id="tbody"></tbody></table>
+</section>
+</main>
 <script>
-  const ids = ["initial","salary","salaryGrowth","investRate","returnRate","years"];
-  const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
-  const yen = n => Math.round(n).toLocaleString("ja-JP") + "円";
-  const man = n => (n/10000).toLocaleString("ja-JP",{maximumFractionDigits:0}) + "万円";
-  const pct = n => Number(n).toFixed(1).replace(".0","") + "%";
-
-  function calc(){
-    const initial = +el.initial.value;
-    const salary0 = +el.salary.value;
-    const sg = +el.salaryGrowth.value / 100;
-    const ir = +el.investRate.value / 100;
-    const rr = +el.returnRate.value / 100;
-    const years = +el.years.value;
-
-    document.getElementById("vInitial").textContent = man(initial);
-    document.getElementById("vSalary").textContent = man(salary0);
-    document.getElementById("vSalaryGrowth").textContent = pct(el.salaryGrowth.value);
-    document.getElementById("vInvestRate").textContent = pct(el.investRate.value);
-    document.getElementById("vReturnRate").textContent = pct(el.returnRate.value);
-    document.getElementById("vYears").textContent = years + "年";
-
-    let asset = initial, totalInvest = 0;
-    const rows = [];
-    for(let y=1; y<=years; y++){
-      const salary = salary0 * Math.pow(1+sg, y-1);
-      const invest = salary * ir;
-      asset = asset * (1+rr) + invest;
-      totalInvest += invest;
-      rows.push({year:y, salary, invest, asset});
-    }
-
-    const last = rows[rows.length-1];
-    document.getElementById("finalAsset").textContent = man(last.asset);
-    document.getElementById("finalSalary").textContent = man(last.salary);
-    document.getElementById("totalInvested").textContent = man(totalInvest);
-    document.getElementById("gain").textContent = man(last.asset - initial - totalInvest);
-
-    draw(rows);
-    fillTable(rows);
-  }
-
-  function draw(rows){
-    const c = document.getElementById("chart"), ctx = c.getContext("2d");
-    const W=c.width,H=c.height,p=48;
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle="#020617"; ctx.fillRect(0,0,W,H);
-    const max = Math.max(...rows.map(r=>r.asset), ...rows.map(r=>r.salary));
-    const x = i => p + i*(W-p*1.4)/(rows.length-1 || 1);
-    const y = v => H-p - (v/max)*(H-p*1.7);
-
-    ctx.strokeStyle="#334155"; ctx.lineWidth=1;
-    for(let i=0;i<5;i++){
-      const yy=p+i*(H-p*1.7)/4;
-      ctx.beginPath(); ctx.moveTo(p,yy); ctx.lineTo(W-p/2,yy); ctx.stroke();
-    }
-
-    function line(key, color){
-      ctx.strokeStyle=color; ctx.lineWidth=4; ctx.beginPath();
-      rows.forEach((r,i)=>{ const xx=x(i), yy=y(r[key]); i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); });
-      ctx.stroke();
-    }
-    line("asset","#38bdf8");
-    line("salary","#22c55e");
-
-    ctx.fillStyle="#e5e7eb"; ctx.font="24px -apple-system";
-    ctx.fillText("資産", p, 28); ctx.fillStyle="#38bdf8"; ctx.fillRect(p+54,12,26,8);
-    ctx.fillStyle="#e5e7eb"; ctx.fillText("年収", p+100, 28); ctx.fillStyle="#22c55e"; ctx.fillRect(p+154,12,26,8);
-  }
-
-  function fillTable(rows){
-    const tbody = document.getElementById("tbody");
-    const sampled = rows.filter((_,i)=> i===0 || (i+1)%5===0 || i===rows.length-1);
-    tbody.innerHTML = sampled.map(r => `<tr><td>${r.year}年目</td><td>${man(r.salary)}</td><td>${man(r.invest)}</td><td>${man(r.asset)}</td></tr>`).join("");
-  }
-
-  ids.forEach(id => el[id].addEventListener("input", calc));
-  calc();
+const ids=["initial","salary","salaryGrowth","investRate","returnRate","years"];
+const el=Object.fromEntries(ids.map(id=>[id,document.getElementById(id)]));
+const man=n=>(n/10000).toLocaleString("ja-JP",{maximumFractionDigits:0})+"万円";
+const oku=n=>n>=100000000?(n/100000000).toLocaleString("ja-JP",{maximumFractionDigits:2})+"億円":man(n);
+const pct=n=>Number(n).toFixed(1).replace(".0","")+"%";
+function simulate(p){let asset=p.initial,totalInvest=0,rows=[];for(let y=1;y<=p.years;y++){let salary=p.salary0*Math.pow(1+p.salaryGrowth,y-1);let invest=salary*p.investRate;asset=asset*(1+p.returnRate)+invest;totalInvest+=invest;rows.push({year:y,salary,invest,asset,totalInvest});}return rows;}
+function calc(){
+ const p={initial:+el.initial.value,salary0:+el.salary.value,salaryGrowth:+el.salaryGrowth.value/100,investRate:+el.investRate.value/100,returnRate:+el.returnRate.value/100,years:+el.years.value};
+ vInitial.textContent=man(p.initial);vSalary.textContent=man(p.salary0);vSalaryGrowth.textContent=pct(el.salaryGrowth.value);vInvestRate.textContent=pct(el.investRate.value);vReturnRate.textContent=pct(el.returnRate.value);vYears.textContent=p.years+"年";
+ const base=simulate(p), bear=simulate({...p,salaryGrowth:p.salaryGrowth*.6,investRate:p.investRate*.85,returnRate:p.returnRate*.65}), bull=simulate({...p,salaryGrowth:p.salaryGrowth*1.25,investRate:Math.min(.8,p.investRate*1.2),returnRate:p.returnRate*1.25});
+ const lb=base[base.length-1], le=bull[bull.length-1], lw=bear[bear.length-1];
+ baseAsset.textContent=oku(lb.asset);bullAsset.textContent=oku(le.asset);bearAsset.textContent=oku(lw.asset);
+ const fire=base.find(r=>r.asset>=100000000);fireYear.textContent=fire?fire.year+"年目":"未達";
+ comment.textContent="同じ初期条件でも、攻めと守りの最終資産差は約"+oku(le.asset-lw.asset)+"。特に10年目以降は、年収成長と投資率の維持が資産曲線を大きく変えます。";
+ draw([{rows:base,color:"#38bdf8"},{rows:bull,color:"#22c55e"},{rows:bear,color:"#f59e0b"}]);fillTable(base);
+}
+function draw(series){
+ const c=chart,ctx=c.getContext("2d"),W=c.width,H=c.height,p=56;ctx.clearRect(0,0,W,H);ctx.fillStyle="#020617";ctx.fillRect(0,0,W,H);
+ const max=Math.max(...series.flatMap(s=>s.rows.map(r=>r.asset))),len=series[0].rows.length,x=i=>p+i*(W-p*1.45)/(len-1||1),y=v=>H-p-(v/max)*(H-p*1.7);
+ ctx.strokeStyle="#334155";ctx.lineWidth=1;ctx.fillStyle="#94a3b8";ctx.font="22px -apple-system";
+ for(let i=0;i<5;i++){let yy=p+i*(H-p*1.7)/4;ctx.beginPath();ctx.moveTo(p,yy);ctx.lineTo(W-p/2,yy);ctx.stroke();ctx.fillText(oku(max*(1-i/4)),8,yy+8);}
+ for(const s of series){ctx.strokeStyle=s.color;ctx.lineWidth=5;ctx.beginPath();s.rows.forEach((r,i)=>{let xx=x(i),yy=y(r.asset);i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);});ctx.stroke();}
+}
+function fillTable(rows){const sampled=rows.filter((_,i)=>i===0||(i+1)%5===0||i===rows.length-1);tbody.innerHTML=sampled.map(r=>`<tr><td>${r.year}年目</td><td>${man(r.salary)}</td><td>${man(r.invest)}</td><td>${oku(r.asset)}</td></tr>`).join("");}
+ids.forEach(id=>el[id].addEventListener("input",calc));calc();
 </script>
 </body>
 </html>
